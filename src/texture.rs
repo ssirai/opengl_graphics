@@ -46,31 +46,9 @@ impl Texture {
         }
 
         let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                pixels.as_ptr() as *const c_void
-            );
-        }
+        let ptr = pixels.as_ptr() as *const c_void;
+
+        Texture::build(&mut id, ptr, width, height);
 
         Ok(Texture::new(id, width, height))
     }
@@ -89,33 +67,10 @@ impl Texture {
         };
 
         let (width, height) = img.dimensions();
-
         let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                img.raw_pixels().as_ptr() as *const c_void
-            );
-        }
+        let ptr = img.raw_pixels().as_ptr() as *const c_void;
+
+        Texture::build(&mut id, ptr, width, height);
 
         Ok(Texture::new(id, width, height))
     }
@@ -125,31 +80,9 @@ impl Texture {
         let (width, height) = img.dimensions();
 
         let mut id: GLuint = 0;
-        unsafe {
-            gl::GenTextures(1, &mut id);
-            gl::BindTexture(gl::TEXTURE_2D, id);
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MIN_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexParameteri(
-                gl::TEXTURE_2D,
-                gl::TEXTURE_MAG_FILTER,
-                gl::LINEAR as i32
-            );
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA as i32,
-                width as i32,
-                height as i32,
-                0,
-                gl::RGBA,
-                gl::UNSIGNED_BYTE,
-                img.pixelbuf().as_ptr() as *const c_void
-            );
-        }
+        let ptr = img.pixelbuf().as_ptr() as *const c_void;
+
+        Texture::build(&mut id, ptr, width, height);
 
         Texture::new(id, width, height)
     }
@@ -157,7 +90,7 @@ impl Texture {
     /// Updates image with a new one.
     pub fn update(&mut self, img: &image::ImageBuf<image::Rgba<u8>>) {
         let (width, height) = img.dimensions();
-        
+
         gl::BindTexture(gl::TEXTURE_2D, self.id);
         unsafe {
             gl::TexImage2D(
@@ -170,6 +103,35 @@ impl Texture {
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
                 img.pixelbuf().as_ptr() as *const c_void
+            );
+        }
+    }
+
+    /// Build a 2D texture from pointer to image vector or buffer.
+    fn build(id: &mut GLuint, ptr: *const c_void,  width: u32, height: u32) -> () {
+        unsafe {
+            gl::GenTextures(1, id);
+            gl::BindTexture(gl::TEXTURE_2D, *id);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MAG_FILTER,
+                gl::LINEAR as i32
+            );
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                width as i32,
+                height as i32,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                ptr
             );
         }
     }
